@@ -1,183 +1,66 @@
-# Micro-IT-internship
-import java.sql.*;
+#Micro-IT internship 
 import java.util.Scanner;
 
-public class StudentManagementSystem {
-    static final String DB_URL = "jdbc:sqlite:database.db";
-    static Connection conn;
-    static Scanner scanner = new Scanner(System.in);
-
-    public static void main(String[] args) {
-        try {
-            conn = DriverManager.getConnection(DB_URL);
-            createTable();
-
-            while (true) {
-                System.out.println("\n--- Student Management System ---");
-                System.out.println("1. Add Student");
-                System.out.println("2. View All Students");
-                System.out.println("3. Search Student");
-                System.out.println("4. Update Student");
-                System.out.println("5. Delete Student");
-                System.out.println("6. Exit");
-                System.out.print("Enter your choice (1-6): ");
-                String choice = scanner.nextLine();
-
-                switch (choice) {
-                    case "1" -> addStudent();
-                    case "2" -> viewStudents();
-                    case "3" -> searchStudent();
-                    case "4" -> updateStudent();
-                    case "5" -> deleteStudent();
-                    case "6" -> {
-                        System.out.println("Exiting... Goodbye!");
-                        conn.close();
-                        return;
-                    }
-                    default -> System.out.println("Invalid choice. Please try again.");
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println("Database error: " + e.getMessage());
-        }
+class Calculator {
+    public double add(double a, double b) {
+        return a + b;
     }
 
-    static void createTable() throws SQLException {
-        String sql = """
-            CREATE TABLE IF NOT EXISTS students (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                age INTEGER,
-                grade TEXT
-            );
-        """;
-        try (Statement stmt = conn.createStatement()) {
-            stmt.execute(sql);
-        }
+    public double subtract(double a, double b) {
+        return a - b;
     }
 
-    static void addStudent() {
-        try {
-            System.out.print("Enter name: ");
-            String name = scanner.nextLine();
-            System.out.print("Enter age: ");
-            int age = Integer.parseInt(scanner.nextLine());
-            System.out.print("Enter grade: ");
-            String grade = scanner.nextLine();
-
-            String sql = "INSERT INTO students (name, age, grade) VALUES (?, ?, ?)";
-            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                pstmt.setString(1, name);
-                pstmt.setInt(2, age);
-                pstmt.setString(3, grade);
-                pstmt.executeUpdate();
-                System.out.println("Student added successfully!");
-            }
-        } catch (Exception e) {
-            System.out.println("Error adding student: " + e.getMessage());
-        }
+    public double multiply(double a, double b) {
+        return a * b;
     }
 
-    static void viewStudents() {
-        String sql = "SELECT * FROM students";
-        try (Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-            System.out.println("\n--- All Students ---");
-            while (rs.next()) {
-                System.out.printf("%d | %s | %d | %s\n",
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getInt("age"),
-                        rs.getString("grade"));
-            }
-        } catch (SQLException e) {
-            System.out.println("Error viewing students: " + e.getMessage());
+    public double divide(double a, double b) {
+        if (b == 0) {
+            throw new ArithmeticException("Division by zero is not allowed.");
         }
-    }
-
-    static void searchStudent() {
-        System.out.print("Enter name to search: ");
-        String name = scanner.nextLine();
-        String sql = "SELECT * FROM students WHERE name LIKE ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, "%" + name + "%");
-            try (ResultSet rs = pstmt.executeQuery()) {
-                boolean found = false;
-                while (rs.next()) {
-                    found = true;
-                    System.out.printf("%d | %s | %d | %s\n",
-                            rs.getInt("id"),
-                            rs.getString("name"),
-                            rs.getInt("age"),
-                            rs.getString("grade"));
-                }
-                if (!found) {
-                    System.out.println("No student found with that name.");
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println("Error searching student: " + e.getMessage());
-        }
-    }
-
-    static void updateStudent() {
-        try {
-            System.out.print("Enter student ID to update: ");
-            int id = Integer.parseInt(scanner.nextLine());
-            System.out.print("Enter new name: ");
-            String name = scanner.nextLine();
-            System.out.print("Enter new age: ");
-            int age = Integer.parseInt(scanner.nextLine());
-            System.out.print("Enter new grade: ");
-            String grade = scanner.nextLine();
-
-            String sql = "UPDATE students SET name = ?, age = ?, grade = ? WHERE id = ?";
-            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                pstmt.setString(1, name);
-                pstmt.setInt(2, age);
-                pstmt.setString(3, grade);
-                pstmt.setInt(4, id);
-                int rows = pstmt.executeUpdate();
-                if (rows > 0) {
-                    System.out.println("Student updated successfully!");
-                } else {
-                    System.out.println("Student ID not found.");
-                }
-            }
-        } catch (Exception e) {
-            System.out.println("Error updating student: " + e.getMessage());
-        }
-    }
-
-    static void deleteStudent() {
-        try {
-            System.out.print("Enter student ID to delete: ");
-            int id = Integer.parseInt(scanner.nextLine());
-
-            String sql = "DELETE FROM students WHERE id = ?";
-            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                pstmt.setInt(1, id);
-                int rows = pstmt.executeUpdate();
-                if (rows > 0) {
-                    System.out.println("Student deleted successfully!");
-                } else {
-                    System.out.println("Student ID not found.");
-                }
-            }
-        } catch (Exception e) {
-            System.out.println("Error deleting student: " + e.getMessage());
-        }
+        return a / b;
     }
 }
 
-        String sql = "DELETE FROM students WHERE id = ?";
-        PreparedStatement pstmt = conn.prepareStatement(sql);
-        pstmt.setInt(1, id);
-        int rows = pstmt.executeUpdate();
-        if (rows > 0) {
-            System.out.println("🗑️ Student deleted successfully!");
-        } else {
-            System.out.println("❌ Student ID not found.");
+public class CalculatorApp {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        Calculator calculator = new Calculator();
+
+        System.out.println("Welcome to the Simple Calculator!");
+        System.out.print("Enter the first number: ");
+        double num1 = scanner.nextDouble();
+
+        System.out.print("Enter the second number: ");
+        double num2 = scanner.nextDouble();
+
+        System.out.print("Enter the operation (+, -, *, /): ");
+        char operation = scanner.next().charAt(0);
+        double result;
+
+        switch (operation) {
+            case '+':
+                result = calculator.add(num1, num2);
+                break;
+            case '-':
+                result = calculator.subtract(num1, num2);
+                break;
+            case '*':
+                result = calculator.multiply(num1, num2);
+                break;
+            case '/':
+                try {
+                    result = calculator.divide(num1, num2);
+                } catch (ArithmeticException e) {
+                    System.out.println(e.getMessage());
+                    return; // Exit the program if division by zero
+                }
+                break;
+            default:
+                System.out.println("Invalid operation! Please use +, -, *, or /.");
+                return; // Exit the program if the operation is invalid
         }
+
+        System.out.println("The result is: " + result);
     }
 }
