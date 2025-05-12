@@ -1,4 +1,4 @@
-#Micro-IT internship 
+#Micro-IT internship .
 import java.util.Scanner;
 
 class Calculator {
