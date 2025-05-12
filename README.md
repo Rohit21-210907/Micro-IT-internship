@@ -1,87 +1,146 @@
 # Micro-IT-internship
-import sqlite3
 
-# Connect to SQLite DB (or create it)
-conn = sqlite3.connect('database.db')
-cursor = conn.cursor()
+import java.sql.*;
+import java.util.Scanner;
 
-# Create a table
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS students (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        age INTEGER,
-        grade TEXT
-    )
-''')
-conn.commit()
+public class StudentManagementSystem {
+    static final String DB_URL = "jdbc:sqlite:database.db";
+    static Connection conn;
+    static Scanner scanner = new Scanner(System.in);
 
-def add_student(name, age, grade):
-    cursor.execute("INSERT INTO students (name, age, grade) VALUES (?, ?, ?)", (name, age, grade))
-    conn.commit()
-    print("✅ Student added successfully!")
+    public static void main(String[] args) {
+        try {
+            conn = DriverManager.getConnection(DB_URL);
+            createTable();
 
-def view_students():
-    cursor.execute("SELECT * FROM students")
-    rows = cursor.fetchall()
-    print("\n--- All Students ---")
-    for row in rows:
-        print(row)
+            while (true) {
+                System.out.println("\n📘 Student Management System");
+                System.out.println("1. Add Student");
+                System.out.println("2. View All Students");
+                System.out.println("3. Search Student");
+                System.out.println("4. Update Student");
+                System.out.println("5. Delete Student");
+                System.out.println("6. Exit");
+                System.out.print("Enter your choice (1-6): ");
+                String choice = scanner.nextLine();
 
-def search_student(name):
-    cursor.execute("SELECT * FROM students WHERE name LIKE ?", ('%' + name + '%',))
-    rows = cursor.fetchall()
-    for row in rows:
-        print(row)
+                switch (choice) {
+                    case "1":
+                        addStudent();
+                        break;
+                    case "2":
+                        viewStudents();
+                        break;
+                    case "3":
+                        searchStudent();
+                        break;
+                    case "4":
+                        updateStudent();
+                        break;
+                    case "5":
+                        deleteStudent();
+                        break;
+                    case "6":
+                        System.out.println("👋 Exiting...");
+                        conn.close();
+                        return;
+                    default:
+                        System.out.println("❌ Invalid choice. Please try again.");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 
-def update_student(student_id, name, age, grade):
-    cursor.execute("UPDATE students SET name=?, age=?, grade=? WHERE id=?", (name, age, grade, student_id))
-    conn.commit()
-    print("✅ Student updated successfully!")
+    static void createTable() throws SQLException {
+        String sql = """
+            CREATE TABLE IF NOT EXISTS students (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                age INTEGER,
+                grade TEXT
+            );
+        """;
+        Statement stmt = conn.createStatement();
+        stmt.execute(sql);
+    }
 
-def delete_student(student_id):
-    cursor.execute("DELETE FROM students WHERE id=?", (student_id,))
-    conn.commit()
-    print("🗑️ Student deleted successfully!")
+    static void addStudent() throws SQLException {
+        System.out.print("Enter name: ");
+        String name = scanner.nextLine();
+        System.out.print("Enter age: ");
+        int age = Integer.parseInt(scanner.nextLine());
+        System.out.print("Enter grade: ");
+        String grade = scanner.nextLine();
 
-def main():
-    while True:
-        print("\n📘 Student Management System")
-        print("1. Add Student")
-        print("2. View All Students")
-        print("3. Search Student")
-        print("4. Update Student")
-        print("5. Delete Student")
-        print("6. Exit")
+        String sql = "INSERT INTO students (name, age, grade) VALUES (?, ?, ?)";
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt.setString(1, name);
+        pstmt.setInt(2, age);
+        pstmt.setString(3, grade);
+        pstmt.executeUpdate();
+        System.out.println("✅ Student added successfully!");
+    }
 
-        choice = input("Enter your choice (1-6): ")
+    static void viewStudents() throws SQLException {
+        String sql = "SELECT * FROM students";
+        Statement stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery(sql);
+        System.out.println("\n--- All Students ---");
+        while (rs.next()) {
+            System.out.printf("%d | %s | %d | %s\n", rs.getInt("id"), rs.getString("name"), rs.getInt("age"), rs.getString("grade"));
+        }
+    }
 
-        if choice == '1':
-            name = input("Enter name: ")
-            age = int(input("Enter age: "))
-            grade = input("Enter grade: ")
-            add_student(name, age, grade)
-        elif choice == '2':
-            view_students()
-        elif choice == '3':
-            name = input("Enter name to search: ")
-            search_student(name)
-        elif choice == '4':
-            student_id = int(input("Enter student ID to update: "))
-            name = input("Enter new name: ")
-            age = int(input("Enter new age: "))
-            grade = input("Enter new grade: ")
-            update_student(student_id, name, age, grade)
-        elif choice == '5':
-            student_id = int(input("Enter student ID to delete: "))
-            delete_student(student_id)
-        elif choice == '6':
-            print("👋 Exiting...")
-            break
-        else:
-            print("❌ Invalid choice. Please try again.")
+    static void searchStudent() throws SQLException {
+        System.out.print("Enter name to search: ");
+        String name = scanner.nextLine();
+        String sql = "SELECT * FROM students WHERE name LIKE ?";
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt.setString(1, "%" + name + "%");
+        ResultSet rs = pstmt.executeQuery();
+        while (rs.next()) {
+            System.out.printf("%d | %s | %d | %s\n", rs.getInt("id"), rs.getString("name"), rs.getInt("age"), rs.getString("grade"));
+        }
+    }
 
-    conn.close()
+    static void updateStudent() throws SQLException {
+        System.out.print("Enter student ID to update: ");
+        int id = Integer.parseInt(scanner.nextLine());
+        System.out.print("Enter new name: ");
+        String name = scanner.nextLine();
+        System.out.print("Enter new age: ");
+        int age = Integer.parseInt(scanner.nextLine());
+        System.out.print("Enter new grade: ");
+        String grade = scanner.nextLine();
 
-if __name__ == "__main__":
-    main()
+        String sql = "UPDATE students SET name = ?, age = ?, grade = ? WHERE id = ?";
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt.setString(1, name);
+        pstmt.setInt(2, age);
+        pstmt.setString(3, grade);
+        pstmt.setInt(4, id);
+        int rows = pstmt.executeUpdate();
+        if (rows > 0) {
+            System.out.println("✅ Student updated successfully!");
+        } else {
+            System.out.println("❌ Student ID not found.");
+        }
+    }
+
+    static void deleteStudent() throws SQLException {
+        System.out.print("Enter student ID to delete: ");
+        int id = Integer.parseInt(scanner.nextLine());
+
+        String sql = "DELETE FROM students WHERE id = ?";
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt.setInt(1, id);
+        int rows = pstmt.executeUpdate();
+        if (rows > 0) {
+            System.out.println("🗑️ Student deleted successfully!");
+        } else {
+            System.out.println("❌ Student ID not found.");
+        }
+    }
+}
